@@ -52,7 +52,7 @@ class LayerNN:
     neural layer for a neural network
     """
 
-    def __init__(self, lot_of_neuron: int, n_input: int, activation_func):
+    def __init__(self, n_input: int, lot_of_neuron: int, activation_func):
         self.lot_of_neuron = lot_of_neuron
         self.n_input = n_input
         self.activation_func = activation_func
@@ -99,6 +99,7 @@ class LayerNN:
         a1 = self.activation_func(z1)
         self.collect_cache(z1=z1, a1=a1, X=X)
 
+
 class Optimizer:
     """
 
@@ -113,32 +114,32 @@ class MultilayerNN:
     neural network
     """
 
-    def __init__(self, param_neural_network: dict,  n_input: list, optimizer):
+    def __init__(self, param_neural_network: dict, n_input: int, optimizer=None):
         """
         :param param_neural_network: a dictionary that describes the number of layers, neurons, and activation functions
         example: neural_network = {"layer_1": [2, 'sigmoid', 'deriv_sigmoid'],
         'layer_2': [3, 'sigmoid', 'deriv_sigmoid'], 'layer_3': [1, 'sigmoid', 'deriv_sigmoid']}
-        :param  n_input:
+        :param  n_input: number of input parameters
         :param optimizer:
         """
         self.param_neural_network = param_neural_network
         self.lot_of_layer = len(param_neural_network)
-        self. n_input = n_input
+        self.n_input = n_input
         self.optimizer = optimizer
-        self.neural_network: dict
-        self._initialize_params(self.param_neural_network, self. n_input)
+        self.neural_network = {}  # stored layers of the neural network
+        self._initialize_layers(self.param_neural_network, self.n_input)
 
-    def _initialize_params(self, param_neural_network, n_input):
+    def _initialize_layers(self, param_neural_network, n_input):
         """
-
         :param param_neural_network:
         :param n_input: DOTO: исправить
         :return:
         """
-        for key, i in param_neural_network.keys(), range(len(param_neural_network)):
+        for key in param_neural_network.keys():
             param_key = param_neural_network[key]
-            layer = {key: LayerNN(param_key[0], n_input)}
+            layer = {key: LayerNN(n_input, param_key[0], param_key[1])}
             self.neural_network.update(layer)
+        print("_initialize_layers end")
 
 
 def sigmoid(z):
@@ -149,15 +150,16 @@ def sigmoid(z):
         np.exp(z) / (1 + np.exp(z))
     )
 
+
 # program body
 def main():
     # a = np.array([2])
     # b = np.array([3])
-    # neural_network = {"layer_1": [2, 'sigmoid'], 'layer_2': [2, 'sigmoid'], 'layer_3': [2, 'sigmoid']}
+    neural_network = {"layer_1": [2, sigmoid], 'layer_2': [2, sigmoid], 'layer_3': [2, sigmoid]}
     # print(len(neural_network))
     # for _ in range(10):
     #     a = np.vstack((a, [2]))
-        # b = np.vstack((b, [3]))
+    #     b = np.vstack((b, [3]))
     # print(a.T @ b)
     # print(len(b))
     dataset = Dataset(point=1000, dimensionality=3, petals=4, radius=6)
@@ -165,6 +167,7 @@ def main():
     X = np.array([1, 2])
     layer = LayerNN(2, 2, sigmoid)
     layer.forward(X)
+    model = MultilayerNN(neural_network, 2, )
     print('end')
 
 
