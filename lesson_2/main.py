@@ -91,7 +91,7 @@ class OneLayerNN:
             if activation == "tanh":
                 self.__dict__['activation' + str(i + 1)] = np.tanh
                 self.__dict__['activation' + str(i + 1) + "_backward"] = \
-                    lambda x: 1 - np.tanh(x) ** 2
+                        lambda x: 1 - np.tanh(x) ** 2
             if activation == "sigmoid":
                 self.__dict__['activation' + str(i + 1)] = self.sigmoid
                 self.__dict__['activation' + str(i + 1) + "_backward"] = \
@@ -151,7 +151,7 @@ class OneLayerNN:
         z1, a1, z2, a2, X = self.unpack_cache(['z1', 'a1', 'z2',
                                                'a2', 'X'])
 
-        dz2 = dL * (a2 * (1. - a2))
+        dz2 = dL * (a2 * (1. - a2))  # dL * div_sigmoid(a2)
         dw2 = dL.T @ a1
         db2 = dL.T @ np.ones((z2.shape[0]))
 
