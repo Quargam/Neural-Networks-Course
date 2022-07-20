@@ -1,21 +1,21 @@
 # Homework #1
 #### Kapylov Maksim
 ---
-Суть ТЗ находится в файле `technical specification.txt`.
+РЎСѓС‚СЊ РўР— РЅР°С…РѕРґРёС‚СЃСЏ РІ С„Р°Р№Р»Рµ `technical specification.txt`.
 
-Давайте выпишим формулы для forward propagation и  backward propagation.
+Р”Р°РІР°Р№С‚Рµ РІС‹РїРёС€РёРј С„РѕСЂРјСѓР»С‹ РґР»СЏ forward propagation Рё  backward propagation.
 
 
 
 
 
 ## forward propagation
- $$ z^{(i)} = w^{(i)}x^{(i)} +b^{(i)} $$ -- Математические операции в нейроне.
 
- $$ \hat{y}^{(i)} = sigmoid(z^{(i)}) $$ --  Функция активации.
+ $$ z^{(i)} = w^{(i)}x^{(i)} +b^{(i)} -- РњР°С‚РµРјР°С‚РёС‡РµСЃРєРёРµ РѕРїРµСЂР°С†РёРё РІ РЅРµР№СЂРѕРЅРµ. $$
 
+ $$ \hat{y}^{(i)} = sigmoid(z^{(i)}) --  Р¤СѓРЅРєС†РёСЏ Р°РєС‚РёРІР°С†РёРё. $$
 
- $$ \hat{L}^{(i)}  = (y^{(i)} - \hat{y}^{(i)})^2 $$ -- Функция потерь.
+ $$ \hat{L}^{(i)}  = (y^{(i)} - \hat{y}^{(i)})^2 -- Р¤СѓРЅРєС†РёСЏ РїРѕС‚РµСЂСЊ. $$
 
 ## backward propagation
 
@@ -31,10 +31,12 @@
 
  $$ \dfrac{\partial J}{\partial b^{(i)}} =  \dfrac{\partial J}{\partial\hat{y}^{(i)}} \times \dfrac{\partial\hat{y}^{(i)}}{\partial z^{(i)}}\times \dfrac{\partial z^{(i)}}{\partial b^{(i)}} $$
 
-## Обновление параметров
+## РћР±РЅРѕРІР»РµРЅРёРµ РїР°СЂР°РјРµС‚СЂРѕРІ
 
  $$ w = w - \alpha \dfrac{\partial J}{\partial w} $$
 
  $$ b = b - \alpha \dfrac{\partial J}{\partial b} $$
+
+
 
 
