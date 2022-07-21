@@ -10,7 +10,7 @@ import os
 
 
 def load_planar_dataset(m=400):
-    # np.random.seed(1)
+    np.random.seed(1)
     N = int(m / 2)  # number of points per class
     print(f"N:{N}, m:{m}")
     D = 2  # dimensionality
@@ -268,7 +268,7 @@ def main():
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True)
 
-    model = OneLayerNN(n_input=2, n_hidden=32, activation_funs=['tanh', 'sigmoid'])  # ['tanh', 'sigmoid']
+    model = OneLayerNN(n_input=2, n_hidden=50, activation_funs=['tanh', 'sigmoid'])  # ['tanh', 'sigmoid']
     optimizer = Optimizer(model, lr=1e-2)
     loss = Loss(model, binary_crossentropy, binary_crossentropy_bw)
     model.summary()

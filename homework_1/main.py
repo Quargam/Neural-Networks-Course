@@ -1,10 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-
 from scipy.constants import point
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, recall_score
+
+
 # import os
 
 
@@ -46,6 +47,7 @@ class Dataset:
         plt.scatter(self.X[:, 0], self.X[:, 1], c=self.Y[:, 0], s=40, cmap=plt.cm.Spectral)
         plt.show()
 
+
 def plot_decision_boundary(model, X, y):
     # Set min and max values and give it some padding
     X = X.T
@@ -63,6 +65,7 @@ def plot_decision_boundary(model, X, y):
     plt.xlabel('x1')
     plt.scatter(X[0, :], X[1, :], c=y, cmap=plt.cm.Spectral)
     plt.show()
+
 
 class LayerNN:
     """
@@ -133,13 +136,13 @@ class LayerNN:
     def backward(self, dL):
 
         z1, a1, X = self.unpack_cache(['z1', 'a1', 'X'])
-
-        dz1 = dL * self.activation_func(a1)
+        # print(f'X:{X.shape},z1:{z1.shape},a1:{a1.shape},dL:{dL.shape}')
+        dz1 = dL * self.deriv_activation_func(a1)
         dw1 = dL.T @ X
         db1 = dL.T @ np.ones((z1.shape[0]))
-
         self.collect_grads(dw1=dw1, db1=db1)
-        return dz1
+        # print(f'dz1:{dz1.shape},dw{dw1.shape}:,db:{db1.shape}')
+        return dz1 @ self.params["w1"]
 
 
 class Optimizer:
@@ -170,7 +173,7 @@ class MultilayerNN:
     neural network
     """
 
-    def __init__(self, param_neural_network: dict, n_input: int, optimizer=None):
+    def __init__(self, param_neural_network: dict, n_input: int, ):
         """
         :param param_neural_network: a dictionary that describes the number of layers, neurons, and activation functions
         example: neural_network = {"layer_1": [2, 'sigmoid', 'deriv_sigmoid'],
@@ -181,7 +184,6 @@ class MultilayerNN:
         self.param_neural_network = param_neural_network
         self.lot_of_layer = len(param_neural_network)
         self.n_input = n_input
-        self.optimizer = optimizer
         self.neural_network = {}  # stored layers of the neural network
         self.outputNN = None
         self._initialize_layers(self.param_neural_network, self.n_input)
@@ -200,7 +202,7 @@ class MultilayerNN:
             layer = {key: LayerNN(n_input_arr[i], param_key[0], param_key[1], param_key[2])}
             self.neural_network.update(layer)
             # print("_initialize_layers end")
-        print(f"self.neural_network:{self.neural_network}")
+        # print(f"self.neural_network:{self.neural_network}")
         return self.neural_network
 
     def forward(self, X):
@@ -216,6 +218,7 @@ class MultilayerNN:
     def backward(self, dL):
         dA = dL
         for i, key in enumerate(reversed(self.neural_network.keys()), 0):
+            # print(f"{key}: ")
             dA = self.neural_network[key].backward(dA)
 
 
@@ -240,6 +243,7 @@ class Loss:
         assert (self.a is not None) and (self.y is not None), "loss.forward() must be called first!"
         self.dL = self.loss_fn_bw(self.a, self.y)
         self.model.backward(self.dL, **params)
+        return self.dL
 
 
 def sigmoid(z):
@@ -261,36 +265,48 @@ def mse_func(a, y):
 
 
 def deriv_mse_func(a, y, eps=1e-5):
-    return -1. / len(a) * ((y - a) / (eps + a * (1. - a)))
+    return -1. / len(a) * (y - a) * 2
 
 
 # program body
 def main():
-    # neural_network = {"layer_1": [1, sigmoid], 'last_layer_2': [1, sigmoid]}
+    # neural_network = {"layer_1": [100, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
+    #                   'last_layer_2': [1, sigmoid, deriv_sigmoid]}
     # работает если в слоях одинаковое количество нейронов
-    neural_network = {"layer_1": [8, sigmoid, deriv_sigmoid], 'layer_2': [16, sigmoid, deriv_sigmoid], 'last_layer_3': [1, sigmoid, deriv_sigmoid]}
-    dataset = Dataset(point=1000, dimensionality=2, petals=4, radius=6)
+    # neural_network = {"layer_1": [16, sigmoid, deriv_sigmoid], 'layer_2': [32, sigmoid, deriv_sigmoid],
+    #                   'last_layer_3': [1, sigmoid, deriv_sigmoid]}
+    neural_network = {"layer_1": [50, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
+                      'layer_2': [100, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
+                      'layer_3': [100, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
+                      'last_layer_4': [1, sigmoid, deriv_sigmoid]}
+    dataset = Dataset(point=1000, dimensionality=2, petals=4, radius=6, random_seed=1)
     X, y = dataset.X, dataset.Y
     X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True)
-    dataset.show_start_graph()
-    model = MultilayerNN(neural_network, n_input=2, optimizer=None)
+    # dataset.show_start_graph()
+    model = MultilayerNN(neural_network, n_input=2, )
     optimizer = Optimizer(model, lr=1e-2)
     loss = Loss(model, mse_func, deriv_mse_func)
-
-    num_epochs = 15000
+    num_epochs = 25000
     for i in range(num_epochs):
-        a = model(X_train)
+        a = model.forward(X_train)
         l = loss(a, y_train)
-        loss.backward()
+        # print(model.neural_network["layer_1"].cache["a1"] - model.neural_network["layer_2"].cache["X"])
+        dL = loss.backward()
         optimizer.step()
         optimizer.zero_grad()
-
+        # print('end')
         if (i % 400 == 0):
             a_val = model(X_test)
             print("Epoch %d/%d\t Loss: %.3f" % (i, num_epochs, l), end='\t')
             print("Accuracy: %.3f" % (accuracy_score(y_train, a > 0.5)), end='\t')
             print("Val_loss: %.3f" % (loss(a_val, y_test)), end='\t')
             print("Val_accuracy: %.3f" % (accuracy_score(y_test, a_val > 0.5)))
+
+    print("Decision Boundary for train, hidden layer size ")
+    plot_decision_boundary(lambda x: model(x) > 0.5, X_train, y_train)
+
+    print("Decision Boundary for test, hidden layer size ")
+    plot_decision_boundary(lambda x: model(x) > 0.5, X_test, y_test)
 
 
 if __name__ == '__main__':
