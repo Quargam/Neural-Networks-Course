@@ -36,6 +36,10 @@
  $$ w = w - \alpha \dfrac{\partial J}{\partial w} $$
 
  $$ b = b - \alpha \dfrac{\partial J}{\partial b} $$
+ 
+ ## Дополнительно
+ 
+ Более подробные формулы для backward на картинке `backward.jpg`
 
 
 
