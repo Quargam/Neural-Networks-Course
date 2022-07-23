@@ -48,7 +48,7 @@ class Dataset:
         plt.show()
 
 
-def plot_decision_boundary(model, X, y, dimensionality = 1):
+def plot_decision_boundary(model, X, y, dimensionality=1):
     # Set min and max values and give it some padding
     X = X.T
     x_min, x_max = X[0, :].min() - 1, X[0, :].max() + 1
@@ -63,7 +63,7 @@ def plot_decision_boundary(model, X, y, dimensionality = 1):
     plt.contourf(xx, yy, Z, cmap=plt.cm.Spectral)
     plt.ylabel('x2')
     plt.xlabel('x1')
-    plt.scatter(X[0, :], X[1, :], c=y*dimensionality, cmap=plt.cm.Spectral)
+    plt.scatter(X[0, :], X[1, :], c=y * dimensionality, cmap=plt.cm.Spectral)
     plt.show()
 
 
@@ -342,25 +342,27 @@ def deriv_mse_func(a, y):
 
 
 def main():
-    # neural_network = {"layer_1": [100, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
-    #                   'last_layer_2': [1, sigmoid, deriv_sigmoid]}
-    # neural_network = {"layer_1": [16, sigmoid, deriv_sigmoid],
-    #                   'layer_2': [32, sigmoid, deriv_sigmoid],
+    neural_network = {"layer_1": [64, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
+                      'last_layer_2': [1, sigmoid, deriv_sigmoid]}
+    # neural_network = {"layer_1": [8, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
+    #                   'layer_2': [8, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
     #                   'last_layer_3': [1, sigmoid, deriv_sigmoid]}
-    neural_network = {"layer_1": [40, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
-                      'layer_2': [30, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
-                      'layer_3': [20, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
-                      'last_layer_4': [1, sigmoid, deriv_sigmoid]}
-    dataset = Dataset(point=600, dimensionality=2, petals=4, radius=6, random_seed=1)
+    # neural_network = {"layer_1": [50, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
+    #                   'layer_2': [100, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
+    #                   'layer_3': [100, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
+    #                   'layer_4': [50, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
+    #                   'last_layer_5': [1, sigmoid, deriv_sigmoid]}
+    dataset = Dataset(point=1100, dimensionality=2, petals=4, radius=6, random_seed=1)
     X, y = dataset.X, dataset.Y
     X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True)
     dataset.show_start_graph()
     model = MultilayerNN(neural_network, n_input=2, )
-    optimizer = Optimizer(model, lr=1e-4)
+    optimizer = Optimizer(model, lr=1e-3)
     loss = Loss(model, mse_func, deriv_mse_func)
     x_list_plt = []
-    y_list_plt = []
-    num_epochs = 100000
+    y_list_train_plt = []
+    y_list_test_plt = []
+    num_epochs = 40000
     for i in range(num_epochs):
         a = model.forward(X_train)
         l = loss(a, y_train)
@@ -368,8 +370,11 @@ def main():
         optimizer.step()
         optimizer.zero_grad()
         if ((i % 400 == 0)):
+            a_test = model.forward(X_test)
+            l_test = loss(a_test, y_test)
             x_list_plt.append(i)
-            y_list_plt.append(l)
+            y_list_train_plt.append(l)
+            y_list_test_plt.append(l_test)
             a_val = model(X_test)
             print("Epoch %d/%d\t Loss: %.3f" % (i, num_epochs, l), end='\t')
             print("Accuracy: %.3f" % (accuracy_score(y_train, a > 0.5)), end='\t')
@@ -377,13 +382,19 @@ def main():
             print("Val_accuracy: %.3f" % (accuracy_score(y_test, a_val > 0.5)))
 
     'сильно лагает когда грузит график'
-    print("Decision Boundary for train, hidden layer size ")
+    plt.title('train & test')
     plt.ylabel('loss')
     plt.xlabel('epochs')
-    plt.plot(x_list_plt,y_list_plt)
+    y_list_train_plt_min = min(y_list_train_plt)
+    x_list_train_plt_min = x_list_plt[y_list_train_plt.index(y_list_train_plt_min)]
+    plt.annotate('min', xy=(x_list_train_plt_min, y_list_train_plt_min), xycoords='data',
+                 xytext=(x_list_train_plt_min, y_list_train_plt_min*1.3), textcoords='data',
+                 arrowprops=dict(facecolor='b'))
+    plt.plot(x_list_plt, y_list_train_plt, label='train')
+    plt.plot(x_list_plt, y_list_test_plt, label='test')
+    plt.legend()
     plt.show()
     plot_decision_boundary(lambda x: model(x) > 0.5, X_train, y_train, dimensionality=2)
-    #
     # print("Decision Boundary for test, hidden layer size ")
     # plot_decision_boundary(lambda x: model(x) > 0.5, X_test, y_test)
 
