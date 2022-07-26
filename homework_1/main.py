@@ -37,7 +37,7 @@ class Dataset:
                             dtype=np.float64) + np.random.randn(N) * (D / random_dist_points)  # theta
             r = radius * np.sin(petals * t) + np.random.randn(N) * 0.2
             X[ix] = np.c_[r * np.sin(t), r * np.cos(t)]
-            Y[ix] = j / float(dimensionality - 1)
+            Y[ix] = j
 
         return X, Y  # X - coordinates of points; Y - color of points
 
@@ -48,7 +48,7 @@ class Dataset:
         plt.show()
 
 
-def plot_decision_boundary(model, X, y, dimensionality=1):
+def plot_decision_boundary(model, X, y):
     # Set min and max values and give it some padding
     X = X.T
     x_min, x_max = X[0, :].min() - 1, X[0, :].max() + 1
@@ -63,7 +63,7 @@ def plot_decision_boundary(model, X, y, dimensionality=1):
     plt.contourf(xx, yy, Z, cmap=plt.cm.Spectral)
     plt.ylabel('x2')
     plt.xlabel('x1')
-    plt.scatter(X[0, :], X[1, :], c=y * dimensionality, cmap=plt.cm.Spectral)
+    plt.scatter(X[0, :], X[1, :], c=y, cmap=plt.cm.Spectral)
     plt.show()
 
 
@@ -147,8 +147,8 @@ class LayerNN:
         """
         z1, a1, X = self.unpack_cache(['z1', 'a1', 'X'])
         dz1 = dL * self.deriv_activation_func(a1)
-        dw1 = dL.T @ X
-        db1 = dL.T @ np.ones((z1.shape[0]))
+        dw1 = dz1.T @ X
+        db1 = dz1.T @ np.ones((z1.shape[0]))
         self.collect_grads(dw1=dw1, db1=db1)
         return dz1 @ self.params["w1"]
 
@@ -180,6 +180,7 @@ class Optimizer:
             grads = self.model.neural_network[key].gradients
             for i in old_params.keys():
                 new_params[i] = params[i] - self.lr * grads["d" + i]
+                # print(f'{key}:\t{i}:{params[i].shape}')
             self.model.neural_network[key].params = new_params
 
     def zero_grad(self):
@@ -338,31 +339,43 @@ def deriv_mse_func(a, y):
     return -1. / len(a) * (y - a) * 2
 
 
+def binary_crossentropy(a, y, eps=1e-5):
+    return -(y * np.log(eps + a) + (1. - y) * np.log(eps + 1. - a)).mean()
+
+
+def binary_crossentropy_bw(a, y, eps=1e-5):
+    return -1. / len(a) * ((y - a) / (eps + a * (1. - a)))
+
+
 """program body"""
 
 
 def main():
-    neural_network = {"layer_1": [64, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
+    neural_network = {"layer_1": [200, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
                       'last_layer_2': [1, sigmoid, deriv_sigmoid]}
-    # neural_network = {"layer_1": [8, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
-    #                   'layer_2': [8, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
-    #                   'last_layer_3': [1, sigmoid, deriv_sigmoid]}
+    # neural_network = {"layer_1": [20, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
+    #                   'layer_2': [25, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
+    #                   'layer_3': [30, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
+    #                   'layer_4': [25, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
+    #                   'layer_5': [15, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
+    #                   'last_layer_6': [1, sigmoid, deriv_sigmoid]}
     # neural_network = {"layer_1": [50, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
-    #                   'layer_2': [100, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
+    #                s   'layer_2': [100, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
     #                   'layer_3': [100, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
     #                   'layer_4': [50, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
     #                   'last_layer_5': [1, sigmoid, deriv_sigmoid]}
-    dataset = Dataset(point=1100, dimensionality=2, petals=4, radius=6, random_seed=1)
+    dataset = Dataset(point=600, dimensionality=2, petals=4, radius=6, random_seed=1)
     X, y = dataset.X, dataset.Y
     X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True)
     dataset.show_start_graph()
     model = MultilayerNN(neural_network, n_input=2, )
     optimizer = Optimizer(model, lr=1e-3)
+    # loss = Loss(model, binary_crossentropy, binary_crossentropy_bw)
     loss = Loss(model, mse_func, deriv_mse_func)
     x_list_plt = []
     y_list_train_plt = []
     y_list_test_plt = []
-    num_epochs = 40000
+    num_epochs = 10000
     for i in range(num_epochs):
         a = model.forward(X_train)
         l = loss(a, y_train)
@@ -388,13 +401,14 @@ def main():
     y_list_train_plt_min = min(y_list_train_plt)
     x_list_train_plt_min = x_list_plt[y_list_train_plt.index(y_list_train_plt_min)]
     plt.annotate('min', xy=(x_list_train_plt_min, y_list_train_plt_min), xycoords='data',
-                 xytext=(x_list_train_plt_min, y_list_train_plt_min*1.3), textcoords='data',
+                 xytext=(x_list_train_plt_min, y_list_train_plt_min * 1.3), textcoords='data',
                  arrowprops=dict(facecolor='b'))
     plt.plot(x_list_plt, y_list_train_plt, label='train')
     plt.plot(x_list_plt, y_list_test_plt, label='test')
     plt.legend()
     plt.show()
-    plot_decision_boundary(lambda x: model(x) > 0.5, X_train, y_train, dimensionality=2)
+    plot_decision_boundary(lambda x: model(x) > 0.5, X_train, y_train)
+    # plot_decision_boundary(lambda x: model(x), X_train, y_train)
     # print("Decision Boundary for test, hidden layer size ")
     # plot_decision_boundary(lambda x: model(x) > 0.5, X_test, y_test)
 
