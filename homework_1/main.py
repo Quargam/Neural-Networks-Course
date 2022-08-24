@@ -53,7 +53,7 @@ def plot_decision_boundary(model, X, y):
     X = X.T
     x_min, x_max = X[0, :].min() - 1, X[0, :].max() + 1
     y_min, y_max = X[1, :].min() - 1, X[1, :].max() + 1
-    h = 0.01
+    h = 0.03
     # Generate a grid of points with distance h between them
     xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
     # Predict the function value for the whole grid
@@ -351,38 +351,40 @@ def binary_crossentropy_bw(a, y, eps=1e-5):
 
 
 def main():
-    neural_network = {"layer_1": [200, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
-                      'last_layer_2': [1, sigmoid, deriv_sigmoid]}
     # neural_network = {"layer_1": [20, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
-    #                   'layer_2': [25, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
-    #                   'layer_3': [30, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
-    #                   'layer_4': [25, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
-    #                   'layer_5': [15, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
-    #                   'last_layer_6': [1, sigmoid, deriv_sigmoid]}
-    # neural_network = {"layer_1": [50, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
-    #                s   'layer_2': [100, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
-    #                   'layer_3': [100, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
-    #                   'layer_4': [50, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
-    #                   'last_layer_5': [1, sigmoid, deriv_sigmoid]}
-    dataset = Dataset(point=600, dimensionality=2, petals=4, radius=6, random_seed=1)
+    #                   'last_layer_2': [1, sigmoid, deriv_sigmoid]}
+    # neural_network = {"layer_1": [20, sigmoid, deriv_sigmoid],
+    #                   'last_layer_2': [1, sigmoid, deriv_sigmoid]}
+    neural_network = {"layer_1": [200, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
+                      'layer_2': [150, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
+                      'layer_3': [100, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
+                      'last_layer_6': [1, sigmoid, deriv_sigmoid]}
+    # neural_network = {"layer_1": [15, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
+    #                   'layer_2': [35, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
+    #                   'last_layer_3': [1, sigmoid, deriv_sigmoid]}
+    # neural_network = {"layer_1": [15, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
+    #                   'layer_2': [30, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
+    #                   'layer_3': [45, np.tanh, lambda x: 1 - np.tanh(x) ** 2],
+    #                   'last_layer_4': [1, sigmoid, deriv_sigmoid]}
+    dataset = Dataset(point=600, dimensionality=2, petals=4, radius=6, random_seed=None)
     X, y = dataset.X, dataset.Y
     X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=True)
-    dataset.show_start_graph()
+    # dataset.show_start_graph()
     model = MultilayerNN(neural_network, n_input=2, )
-    optimizer = Optimizer(model, lr=1e-3)
+    optimizer = Optimizer(model, lr=1e-2)
     # loss = Loss(model, binary_crossentropy, binary_crossentropy_bw)
     loss = Loss(model, mse_func, deriv_mse_func)
     x_list_plt = []
     y_list_train_plt = []
     y_list_test_plt = []
-    num_epochs = 10000
+    num_epochs = 5000
     for i in range(num_epochs):
         a = model.forward(X_train)
         l = loss(a, y_train)
         loss.backward()
         optimizer.step()
         optimizer.zero_grad()
-        if ((i % 400 == 0)):
+        if ((i % 100 == 0)):
             a_test = model.forward(X_test)
             l_test = loss(a_test, y_test)
             x_list_plt.append(i)
